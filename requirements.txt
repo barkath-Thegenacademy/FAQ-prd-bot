@@ -1,0 +1,5 @@
+anthropic>=0.40
+voyageai>=0.3
+psycopg[binary,pool]>=3.2
+pydantic>=2.7
+python-dotenv>=1.0

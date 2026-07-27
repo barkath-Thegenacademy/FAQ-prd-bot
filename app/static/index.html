@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gen Academy FAQ Bot</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="chat-panel" aria-label="FAQ chat">
+        <header class="chat-header">
+          <div>
+            <p class="eyebrow">Gen Academy</p>
+            <h1>FAQ Bot</h1>
+          </div>
+          <span id="status" class="status">Ready</span>
+        </header>
+
+        <div id="messages" class="messages">
+          <article class="message bot">
+            <p>Ask a cohort-content question about recordings, notes, guest sessions, slides, or course concepts.</p>
+          </article>
+        </div>
+
+        <form id="chat-form" class="composer">
+          <input id="message-input" name="message" autocomplete="off" placeholder="Where is the Week 2 recording?" />
+          <button type="submit">Send</button>
+        </form>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

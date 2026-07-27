@@ -1,64 +1,76 @@
-# FAQ-BOT — L3/L4 Basic Agent
+# Gen Academy FAQ Bot POC
 
-Cohort-only support pipeline: Router Agent splits action requests (billing, credits,
-drops) from content questions; content questions pass a Verification Gate before
-reaching L3 (session content, pgvector RAG) or L4 (schedule/deadlines, structured
-lookup); Synthesis Agent writes the cited answer and logs every question to Postgres.
+A web-based FAQ bot for Gen Academy cohort-content questions. It answers only from
+the local approved knowledge base and escalates unsupported or human-action questions
+through Discord and email when those integrations are configured.
 
-Out of scope for this build: L1/L2 (public prospect FAQ) and L5 (live systems
-integration).
+## What It Does
 
-## Layout
-
-```
-db/schema.sql         students, verification_cache, question_log, session_content, schedule_items
-app/config.py         env-backed config
-app/db.py             Postgres connection pool
-app/llm.py            Anthropic client wrapper (plain + JSON completions)
-app/embeddings.py      Voyage AI client wrapper (query/document embedding)
-app/models.py         RouteDecision / VerificationResult / RetrievedChunk / AgentAnswer
-app/pipeline/
-  parse_questions.py   LLM splits a message into discrete questions
-  router_agent.py       classifies: l3 / l4 / action_request / declined
-  verification_gate.py  roster check + 24h session cache
-  l3_agent.py            pgvector similarity search over session_content
-  l4_agent.py            full cohort schedule_items lookup (small table, no RAG)
-  synthesis_agent.py     drafts the cited answer; logs every question to question_log
-  action_request.py      routes billing/credits/drops straight to a human, no draft
-  compose_reply.py       merges per-question answers back in order
-  orchestrator.py        the Loop -- ties all of the above together per message
-app/main.py            CLI entrypoint: run the pipeline on one message
-```
+- Serves a browser chat UI at `/`.
+- Exposes `POST /api/chat` for web, Discord, or email adapters.
+- Retrieves answers from files in `knowledge_base/`.
+- Includes source citations in every factual answer.
+- Keeps short follow-up context during the active in-memory session.
+- Refuses career/job-transition coaching questions.
+- Escalates unsupported questions with the exact fallback text required by the SRS:
+  `I couldn't find this information in the current course material.`
+- Sends escalation notifications to Discord webhook and SMTP email when configured.
 
 ## Setup
 
-1. `python -m venv .venv && .venv\Scripts\activate` (Windows) then `pip install -r requirements.txt`.
-2. Create a Postgres database with the `pgvector` extension available, then run `db/schema.sql` against it.
-3. Copy `.env.example` to `.env` and fill in `ANTHROPIC_API_KEY`, `VOYAGE_API_KEY`, `DATABASE_URL`.
-4. Seed `students` (roster) and `schedule_items` for at least one cohort, and ingest some
-   `session_content` rows with embeddings (chunk + embed via `app/embeddings.py`) so L3/L4 have
-   something to retrieve.
-5. Run: `python -m app.main "when does the certificate get issued?" --identity discord:12345`
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+Copy-Item .env.example .env
+```
 
-## Build sequence status (see plan, Section 6)
+Fill in `.env` if you want escalation delivery:
 
-- [x] 1. Postgres schema
-- [x] 2. L4 agent (structured schedule lookup)
-- [x] 3. L3 agent (pgvector RAG) -- retrieval wired; session content still needs to be ingested
-- [x] 4. Router Agent -- prompted against the real question categories from the plan
-- [x] 5. Verification Gate + Postgres wiring, including the question-log write
-- [ ] 6. Pilot in approval mode -- `app/main.py` only prints the draft today; wiring an actual
-      human approve/edit/reject step (Discord/WhatsApp/email delivery) and override-rate tracking
-      is the next piece of work before this can run live.
+- `DISCORD_WEBHOOK_URL`
+- `ESCALATION_EMAIL_TO`
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_USER`
+- `SMTP_PASSWORD`
+- `EMAIL_FROM`
 
-## Notes / open decisions
+The app still runs without these values; escalation attempts are simply skipped.
 
-- Anthropic doesn't provide an embeddings API, so L3 uses Voyage AI (their recommended
-  embedding partner). `session_content.embedding` is `VECTOR(1024)` to match `voyage-3` --
-  change both together if you pick a different model.
-- `router_agent.classify` decides L3 vs. L4 directly (not a separate step), since the plan's
-  diagrams don't show a distinct L3/L4 selector ahead of the Verification Gate.
-- Unverified content questions and declined (career) questions are still written to
-  `question_log` (per Section 5: "every question that reaches Synthesis... gets written"),
-  just with `verified=false` / route `declined` and no L3/L4 lookup performed.
-# FAQ-BOT-
+## Run
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
+```
+
+Open `http://127.0.0.1:8000`.
+
+## API Example
+
+```powershell
+Invoke-RestMethod `
+  -Method Post `
+  -Uri http://127.0.0.1:8000/api/chat `
+  -ContentType application/json `
+  -Body '{"message":"Where was chunking discussed?","student_identity":"discord:123","channel":"discord"}'
+```
+
+## Knowledge Base
+
+Add approved JSON or Markdown files under `knowledge_base/`. JSON files can contain
+an array of documents:
+
+```json
+[
+  {
+    "id": "week-2-recording",
+    "title": "Week 2 Recording",
+    "source": "Recording Metadata",
+    "url": "https://example.com/week-2",
+    "tags": ["week", "2", "recording"],
+    "content": "The Week 2 recording is listed in the resource index."
+  }
+]
+```
+
+Keep the seed URLs in `knowledge_base/gen_academy_seed.json` as placeholders until
+the approved Gen Academy links are available.

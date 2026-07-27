@@ -1,25 +1,29 @@
-import argparse
+from pathlib import Path
 
-from app.pipeline import compose_reply
-from app.pipeline.orchestrator import process_message
+from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
+from app.answering import answer_chat
+from app.config import get_config
+from app.models import ChatRequest, ChatResponse
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Run the FAQ bot pipeline on a single message.")
-    parser.add_argument("message", help="The incoming student message text.")
-    parser.add_argument("--identity", required=True, help="Discord ID / WhatsApp number / email.")
-    parser.add_argument("--thread-id", default=None, help="Thread/conversation identifier.")
-    args = parser.parse_args()
+app = FastAPI(title=get_config().app_name)
 
-    answers = process_message(args.message, student_identity=args.identity, thread_id=args.thread_id)
-    draft = compose_reply.compose(answers)
-
-    print("\n--- Draft reply (pending human approval) ---\n")
-    print(draft)
-    print("\n--- Per-question routing ---")
-    for a in answers:
-        print(f"[{a.route} / {a.outcome}] {a.question}")
+STATIC_DIR = Path(__file__).resolve().parent / "static"
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
-if __name__ == "__main__":
-    main()
+@app.get("/")
+def index() -> FileResponse:
+    return FileResponse(STATIC_DIR / "index.html")
+
+
+@app.get("/health")
+def health() -> dict[str, str]:
+    return {"status": "ok"}
+
+
+@app.post("/api/chat", response_model=ChatResponse)
+async def chat(request: ChatRequest) -> ChatResponse:
+    return await answer_chat(request)

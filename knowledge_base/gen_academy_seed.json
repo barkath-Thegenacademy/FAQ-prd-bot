@@ -1,0 +1,86 @@
+[
+  {
+    "id": "faq-recording-availability",
+    "title": "Where can I find the recording for a session?",
+    "source": "FAQ: Recording Availability Policy",
+    "url": "https://gen-academy.example/faq/recording-availability",
+    "content": "Recordings are posted in the #recordings channel within 24 hours of the live session. If a recording isn't listed yet, it's still processing — check back the next day before asking."
+  },
+  {
+    "id": "faq-recording-issues",
+    "title": "The recording cut off / is missing a section, what do I do?",
+    "source": "FAQ: Recording Issues",
+    "url": "https://gen-academy.example/faq/recording-issues",
+    "content": "Flag it in #support with the session name and the approximate timestamp where it cuts off. The team re-uploads a corrected version when this happens."
+  },
+  {
+    "id": "faq-chunking-session",
+    "title": "Which session covered chunking strategies?",
+    "source": "Session Notes: Week 3",
+    "url": "https://gen-academy.example/notes/week-3",
+    "content": "Chunking strategies were covered in the Week 3 session, \"RAG Fundamentals — Retrieval and Chunking,\" specifically the second half after the break."
+  },
+  {
+    "id": "faq-embeddings-session",
+    "title": "Which session covered embeddings?",
+    "source": "Session Notes: Week 2",
+    "url": "https://gen-academy.example/notes/week-2",
+    "content": "Embeddings were introduced in the Week 2 session, \"Vector Representations,\" and revisited in Week 3 in the context of retrieval."
+  },
+  {
+    "id": "faq-session-materials",
+    "title": "Where can I find the session slides?",
+    "source": "FAQ: Session Materials",
+    "url": "https://gen-academy.example/faq/session-materials",
+    "content": "Slides are linked at the top of each session's notes document, posted the same day as the live session."
+  },
+  {
+    "id": "faq-guest-speaker",
+    "title": "Who was the guest speaker in a given week?",
+    "source": "Guest Speaker List",
+    "url": "https://gen-academy.example/guests",
+    "content": "See the Guest Speaker List — each entry lists the speaker, their session, and topic."
+  },
+  {
+    "id": "session-notes-week-2",
+    "title": "Session Notes: Week 2 — Vector Representations",
+    "source": "Session Notes: Week 2",
+    "url": "https://gen-academy.example/notes/week-2",
+    "content": "Key concepts: embeddings, vector space, cosine similarity, embedding models. Summary: Introduced how text is converted into vector embeddings, why distance in vector space approximates semantic similarity, and a comparison of common embedding models."
+  },
+  {
+    "id": "session-notes-week-3",
+    "title": "Session Notes: Week 3 — RAG Fundamentals — Retrieval and Chunking",
+    "source": "Session Notes: Week 3",
+    "url": "https://gen-academy.example/notes/week-3",
+    "content": "Key concepts: chunking strategies, chunk overlap, RAG, vector databases. Summary: Covered the RAG pipeline end to end: chunking documents, embedding chunks, storing them in a vector database, and retrieving relevant chunks at query time. Chunking strategy (fixed-size vs. semantic) covered in the second half."
+  },
+  {
+    "id": "recording-week-2",
+    "title": "Week 2 Recording — Vector Representations",
+    "source": "Recording Metadata",
+    "url": "https://example.com/recordings/week2",
+    "content": "Duration: 78 minutes. Available: Yes."
+  },
+  {
+    "id": "recording-week-3",
+    "title": "Week 3 Recording — RAG Fundamentals — Retrieval and Chunking",
+    "source": "Recording Metadata",
+    "url": "https://example.com/recordings/week3",
+    "content": "Duration: 92 minutes. Available: Yes."
+  },
+  {
+    "id": "guest-speaker-week-4",
+    "title": "Guest Speaker — Week 4",
+    "source": "Guest Speaker List",
+    "url": "https://gen-academy.example/guests",
+    "content": "Example Guest Name (Example Company). Topic: Production RAG systems at scale."
+  },
+  {
+    "id": "course-schedule",
+    "title": "Course Schedule",
+    "source": "Course Schedule",
+    "url": "https://gen-academy.example/schedule",
+    "content": "Week 2 — Vector Representations. Week 3 — RAG Fundamentals — Retrieval and Chunking. Week 4 — Guest session: Production RAG systems."
+  }
+]

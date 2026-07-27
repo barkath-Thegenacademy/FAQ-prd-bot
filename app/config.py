@@ -35,7 +35,9 @@ class Config:
 def get_config() -> Config:
     return Config(
         app_name=os.getenv("APP_NAME", "Gen Academy FAQ Bot"),
-        knowledge_base_path=Path(os.getenv("KNOWLEDGE_BASE_PATH", "knowledge_base")),
+        knowledge_base_path=Path(
+            os.getenv("KNOWLEDGE_BASE_PATH", "knowledge_base/cohort_questions_full_list_with_resources.md")
+        ),
         gemini_api_key=os.getenv("GEMINI_API_KEY") or None,
         gemini_model=os.getenv("GEMINI_MODEL", "gemini-flash-latest"),
         discord_webhook_url=os.getenv("DISCORD_WEBHOOK_URL") or None,

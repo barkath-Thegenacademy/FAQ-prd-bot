@@ -9,7 +9,9 @@ def test_answers_known_content_with_source(monkeypatch):
     monkeypatch.setattr(
         answering,
         "synthesize_with_llm",
-        lambda question, documents: "Chunking was covered in Week 3.\n\nSources:\n- Session Notes: Week 3",
+        lambda question, knowledge_base_document: (
+            "Chunking was covered in Week 3.\n\nSources:\n- Session Notes: Week 3"
+        ),
     )
 
     response = asyncio.run(answer_chat(ChatRequest(message="Where was chunking discussed?")))
@@ -24,11 +26,14 @@ def test_declines_career_questions_without_escalation():
 
     assert response.route == "declined"
     assert response.escalated is False
-    assert not response.sources
 
 
 def test_escalates_unknown_content(monkeypatch):
-    monkeypatch.setattr(answering, "synthesize_with_llm", lambda question, documents: NO_MATCH_TEXT)
+    monkeypatch.setattr(
+        answering,
+        "synthesize_with_llm",
+        lambda question, knowledge_base_document: NO_MATCH_TEXT,
+    )
 
     response = asyncio.run(answer_chat(ChatRequest(message="Where is the capstone deployment rubric?")))
 

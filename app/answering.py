@@ -1,5 +1,5 @@
 from app.escalation import escalate
-from app.knowledge import load_documents
+from app.knowledge import load_knowledge_base_document
 from app.llm import synthesize_with_llm
 from app.models import ChatRequest, ChatResponse
 from app.router import classify
@@ -39,7 +39,7 @@ async def answer_chat(request: ChatRequest) -> ChatResponse:
         state.history.append((request.message, ACTION_TEXT))
         return ChatResponse(answer=ACTION_TEXT, route=route, escalated=True, session_id=state.session_id)
 
-    answer = synthesize_with_llm(effective_message, load_documents())
+    answer = synthesize_with_llm(effective_message, load_knowledge_base_document())
 
     if answer is None or answer.strip() == NO_MATCH_TEXT:
         await escalate(

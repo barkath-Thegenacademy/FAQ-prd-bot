@@ -2,12 +2,11 @@ from google import genai
 from google.genai import types
 
 from app.config import get_config
-from app.models import KnowledgeDocument
 
 SYSTEM_PROMPT = """You answer Gen Academy cohort FAQ questions.
 
 Rules:
-- Use only the provided approved course material.
+- Use only the complete approved knowledge base document provided in the prompt.
 - Do not use outside knowledge.
 - Keep the answer concise.
 - Cite source titles in the answer.
@@ -15,18 +14,21 @@ Rules:
 """
 
 
-def synthesize_with_llm(question: str, documents: list[KnowledgeDocument]) -> str | None:
+def synthesize_with_llm(question: str, knowledge_base_document: str) -> str | None:
     config = get_config()
     if not config.gemini_api_key:
         return None
 
-    context = "\n\n".join(
-        f"Title: {doc.title}\nSource: {doc.source}\nContent: {doc.content}" for doc in documents
-    )
+    if not knowledge_base_document.strip():
+        return None
+
     client = genai.Client(api_key=config.gemini_api_key)
     response = client.models.generate_content(
         model=config.gemini_model,
-        contents=f"Question: {question}\n\nApproved material:\n{context}",
+        contents=(
+            f"Question: {question}\n\n"
+            f"Complete approved knowledge base document:\n{knowledge_base_document}"
+        ),
         config=types.GenerateContentConfig(
             system_instruction=SYSTEM_PROMPT,
             temperature=0,

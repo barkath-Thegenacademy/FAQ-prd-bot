@@ -8,7 +8,7 @@ through Discord and email when those integrations are configured.
 
 - Serves a browser chat UI at `/`.
 - Exposes `POST /api/chat` for web, Discord, or email adapters.
-- Retrieves answers from files in `knowledge_base/`.
+- Passes the complete approved knowledge base document to Gemini on every content question.
 - Includes source citations in every factual answer.
 - Keeps short follow-up context during the active in-memory session.
 - Refuses career/job-transition coaching questions.
@@ -56,21 +56,10 @@ Invoke-RestMethod `
 
 ## Knowledge Base
 
-Add approved JSON or Markdown files under `knowledge_base/`. JSON files can contain
-an array of documents:
+Set `KNOWLEDGE_BASE_PATH` to the single approved knowledge base document. The default is
+`knowledge_base/cohort_questions_full_list_with_resources.md`, extracted from
+`Cohort_Questions_Full_List_With_Resources (1).docx`. The app sends that full document to
+the LLM for every content question.
 
-```json
-[
-  {
-    "id": "week-2-recording",
-    "title": "Week 2 Recording",
-    "source": "Recording Metadata",
-    "url": "https://example.com/week-2",
-    "tags": ["week", "2", "recording"],
-    "content": "The Week 2 recording is listed in the resource index."
-  }
-]
-```
-
-Keep the seed URLs in `knowledge_base/gen_academy_seed.json` as placeholders until
-the approved Gen Academy links are available.
+This POC intentionally does not use document chunking, embeddings, vector databases, semantic
+search, Pinecone, FAISS, ChromaDB, or a RAG pipeline.

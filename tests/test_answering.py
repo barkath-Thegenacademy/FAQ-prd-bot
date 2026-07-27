@@ -1,8 +1,7 @@
 import asyncio
 
 import app.answering as answering
-from app.answering import NO_MATCH_TEXT, answer_chat
-from app.models import ChatRequest
+from app.answering import ChatRequest, NO_MATCH_TEXT, answer_chat
 
 
 def test_answers_known_content_with_source(monkeypatch):

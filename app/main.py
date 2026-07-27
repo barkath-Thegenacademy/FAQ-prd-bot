@@ -4,9 +4,8 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.answering import answer_chat
+from app.answering import ChatRequest, ChatResponse, answer_chat
 from app.config import get_config
-from app.models import ChatRequest, ChatResponse
 
 app = FastAPI(title=get_config().app_name)
 

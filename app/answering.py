@@ -1,9 +1,15 @@
+import re
+from typing import Literal
+
+from pydantic import BaseModel, Field
+
 from app.escalation import escalate
 from app.knowledge import load_knowledge_base_document
 from app.llm import synthesize_with_llm
-from app.models import ChatRequest, ChatResponse
-from app.router import classify
 from app.session_memory import get_session, resolve_follow_up
+
+Channel = Literal["web", "discord", "email"]
+Route = Literal["content", "action_request", "declined", "not_question"]
 
 NO_MATCH_TEXT = "I couldn't find this information in the current course material."
 DECLINED_TEXT = (
@@ -15,6 +21,79 @@ ACTION_TEXT = (
     "I have escalated it to the support team."
 )
 ACK_TEXT = "Thanks for the note."
+
+QUESTION_RE = re.compile(r"\?|^(where|what|when|which|who|how|can|could|is|are|do|does|did|has|have)\b", re.I)
+
+ACTION_TERMS = {
+    "billing",
+    "refund",
+    "payment",
+    "promo",
+    "coupon",
+    "credit",
+    "code",
+    "pinecone",
+    "fireworks",
+    "elevenlabs",
+    "replit",
+    "extension",
+    "submit",
+    "submission",
+    "score",
+    "grade",
+    "certificate",
+    "assessment",
+    "access",
+    "login",
+}
+DECLINED_TERMS = {"career", "job", "recruiter", "resume", "cv", "layoff", "interview"}
+CONTENT_TERMS = {
+    "recording",
+    "slides",
+    "notes",
+    "rag",
+    "chunking",
+    "embedding",
+    "embeddings",
+    "session",
+    "week",
+    "guest",
+    "handout",
+    "lecture",
+    "mcp",
+    "eval",
+    "evaluation",
+    "dataset",
+}
+
+
+class ChatRequest(BaseModel):
+    message: str = Field(..., min_length=1)
+    session_id: str | None = None
+    student_identity: str = "anonymous"
+    channel: Channel = "web"
+
+
+class ChatResponse(BaseModel):
+    answer: str
+    route: Route
+    escalated: bool = False
+    session_id: str
+
+
+def classify(message: str) -> Route:
+    text = message.lower()
+    tokens = set(re.findall(r"[a-z0-9]+", text))
+
+    if not QUESTION_RE.search(text) and not (tokens & CONTENT_TERMS):
+        return "not_question"
+    if tokens & DECLINED_TERMS:
+        return "declined"
+    if tokens & CONTENT_TERMS:
+        return "content"
+    if tokens & ACTION_TERMS:
+        return "action_request"
+    return "content"
 
 
 async def answer_chat(request: ChatRequest) -> ChatResponse:

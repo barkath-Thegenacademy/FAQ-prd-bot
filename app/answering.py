@@ -3,12 +3,10 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from app.escalation import escalate
 from app.knowledge import load_knowledge_base_document
 from app.llm import synthesize_with_llm
 from app.session_memory import get_session, resolve_follow_up
 
-Channel = Literal["web", "discord", "email"]
 Route = Literal["content", "action_request", "declined", "not_question"]
 
 NO_MATCH_TEXT = "I couldn't find this information in the current course material."
@@ -18,7 +16,7 @@ DECLINED_TEXT = (
 )
 ACTION_TEXT = (
     "This looks like an account, access, scoring, credit, or submission request that needs a human review. "
-    "I have escalated it to the support team."
+    "Please contact the support team."
 )
 ACK_TEXT = "Thanks for the note."
 
@@ -71,13 +69,11 @@ class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1)
     session_id: str | None = None
     student_identity: str = "anonymous"
-    channel: Channel = "web"
 
 
 class ChatResponse(BaseModel):
     answer: str
     route: Route
-    escalated: bool = False
     session_id: str
 
 
@@ -110,24 +106,14 @@ async def answer_chat(request: ChatRequest) -> ChatResponse:
         return ChatResponse(answer=DECLINED_TEXT, route=route, session_id=state.session_id)
 
     if route == "action_request":
-        await escalate(
-            request.message,
-            student_identity=request.student_identity,
-            reason="Human action required",
-        )
         state.history.append((request.message, ACTION_TEXT))
-        return ChatResponse(answer=ACTION_TEXT, route=route, escalated=True, session_id=state.session_id)
+        return ChatResponse(answer=ACTION_TEXT, route=route, session_id=state.session_id)
 
     answer = synthesize_with_llm(effective_message, load_knowledge_base_document())
 
     if answer is None or answer.strip() == NO_MATCH_TEXT:
-        await escalate(
-            request.message,
-            student_identity=request.student_identity,
-            reason="No matching knowledge found",
-        )
         state.history.append((request.message, NO_MATCH_TEXT))
-        return ChatResponse(answer=NO_MATCH_TEXT, route=route, escalated=True, session_id=state.session_id)
+        return ChatResponse(answer=NO_MATCH_TEXT, route=route, session_id=state.session_id)
 
     state.last_content_question = effective_message
     state.history.append((request.message, answer))

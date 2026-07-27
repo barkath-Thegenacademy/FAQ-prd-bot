@@ -5,9 +5,9 @@ const statusEl = document.querySelector("#status");
 
 let sessionId = localStorage.getItem("faqBotSessionId");
 
-function addMessage(text, kind, escalated = false) {
+function addMessage(text, kind) {
   const node = document.createElement("article");
-  node.className = `message ${kind}${escalated ? " escalated" : ""}`;
+  node.className = `message ${kind}`;
   const p = document.createElement("p");
   p.textContent = text;
   node.appendChild(p);
@@ -33,15 +33,14 @@ form.addEventListener("submit", async (event) => {
       body: JSON.stringify({
         message,
         session_id: sessionId,
-        student_identity: "web-demo",
-        channel: "web"
+        student_identity: "web-demo"
       })
     });
     const data = await response.json();
     sessionId = data.session_id;
     localStorage.setItem("faqBotSessionId", sessionId);
-    addMessage(data.answer, "bot", data.escalated);
-    statusEl.textContent = data.escalated ? "Escalated" : "Ready";
+    addMessage(data.answer, "bot");
+    statusEl.textContent = "Ready";
   } catch (error) {
     addMessage("The bot could not process that request right now.", "bot", true);
     statusEl.textContent = "Error";

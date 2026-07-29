@@ -3,6 +3,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from app.escalation import escalate
 from app.knowledge import load_knowledge_base_document
 from app.llm import synthesize_with_llm
 from app.session_memory import get_session, resolve_follow_up
@@ -12,11 +13,11 @@ Route = Literal["content", "action_request", "declined", "not_question"]
 NO_MATCH_TEXT = "I couldn't find this information in the current course material."
 DECLINED_TEXT = (
     "I can only answer Gen Academy cohort-content questions from the approved course material. "
-    "For career or job-transition advice, please contact your program mentor."
+    "I've flagged this career/job-transition question for your program mentor to follow up."
 )
 ACTION_TEXT = (
     "This looks like an account, access, scoring, credit, or submission request that needs a human review. "
-    "Please contact the support team."
+    "I have escalated it to the support team."
 )
 ACK_TEXT = "Thanks for the note."
 
@@ -49,8 +50,6 @@ CONTENT_TERMS = {
     "recording",
     "slides",
     "notes",
-    "rag",
-    "chunking",
     "embedding",
     "embeddings",
     "session",
@@ -74,6 +73,7 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     answer: str
     route: Route
+    escalated: bool = False
     session_id: str
 
 
@@ -102,18 +102,33 @@ async def answer_chat(request: ChatRequest) -> ChatResponse:
         return ChatResponse(answer=ACK_TEXT, route=route, session_id=state.session_id)
 
     if route == "declined":
+        await escalate(
+            request.message,
+            student_identity=request.student_identity,
+            reason="Career/job-transition question",
+        )
         state.history.append((request.message, DECLINED_TEXT))
-        return ChatResponse(answer=DECLINED_TEXT, route=route, session_id=state.session_id)
+        return ChatResponse(answer=DECLINED_TEXT, route=route, escalated=True, session_id=state.session_id)
 
     if route == "action_request":
+        await escalate(
+            request.message,
+            student_identity=request.student_identity,
+            reason="Human action required",
+        )
         state.history.append((request.message, ACTION_TEXT))
-        return ChatResponse(answer=ACTION_TEXT, route=route, session_id=state.session_id)
+        return ChatResponse(answer=ACTION_TEXT, route=route, escalated=True, session_id=state.session_id)
 
     answer = synthesize_with_llm(effective_message, load_knowledge_base_document())
 
     if answer is None or answer.strip() == NO_MATCH_TEXT:
+        await escalate(
+            request.message,
+            student_identity=request.student_identity,
+            reason="No matching knowledge found",
+        )
         state.history.append((request.message, NO_MATCH_TEXT))
-        return ChatResponse(answer=NO_MATCH_TEXT, route=route, session_id=state.session_id)
+        return ChatResponse(answer=NO_MATCH_TEXT, route=route, escalated=True, session_id=state.session_id)
 
     state.last_content_question = effective_message
     state.history.append((request.message, answer))

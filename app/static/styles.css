@@ -100,6 +100,10 @@ h1 {
   color: #ffffff;
 }
 
+.message.escalated {
+  border-color: #f59e0b;
+}
+
 .composer {
   display: grid;
   grid-template-columns: 1fr auto;
